@@ -569,6 +569,139 @@
             font-weight: 700;
         }
 
+        /* Moderator Panel */
+        .mod-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .mod-tab {
+            padding: 1rem 2rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .mod-tab:hover {
+            color: var(--primary);
+        }
+
+        .mod-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .mod-tab-content {
+            display: none;
+        }
+
+        .mod-tab-content.active {
+            display: block;
+        }
+
+        .mod-section {
+            background: var(--bg-primary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .mod-section h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .filter-section {
+            margin-bottom: 1rem;
+        }
+
+        .mod-post-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            border-left: 4px solid var(--primary);
+        }
+
+        .mod-post-thumbnail {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .mod-post-info {
+            flex: 1;
+        }
+
+        .mod-post-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .mod-post-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .mod-post-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .user-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-item-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -613,6 +746,7 @@
                 📚 Ders Paylaşım Platformu
             </div>
             <div class="user-info" id="userInfo" style="display: none;">
+                <button class="btn btn-primary btn-sm" onclick="openModPanel()" style="margin-right: 1rem;">⚙️ Moderatör Paneli</button>
                 <span class="user-name" id="currentUserName"></span>
                 <button class="btn btn-danger btn-sm" onclick="logout()">Çıkış</button>
             </div>
@@ -704,6 +838,64 @@
         </div>
     </div>
 
+    <!-- Moderator Panel Modal -->
+    <div id="modPanel" class="modal">
+        <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+            <span class="modal-close" onclick="closeModPanel()">&times;</span>
+            <h2 class="modal-title">⚙️ Moderatör Paneli</h2>
+            
+            <div class="mod-tabs">
+                <button class="mod-tab active" onclick="switchModTab('posts')">📝 Tüm Gönderiler</button>
+                <button class="mod-tab" onclick="switchModTab('users')">👥 Kullanıcılar</button>
+                <button class="mod-tab" onclick="switchModTab('stats')">📊 İstatistikler</button>
+            </div>
+
+            <!-- Posts Tab -->
+            <div id="modPostsTab" class="mod-tab-content active">
+                <div class="mod-section">
+                    <h3>Tüm Gönderiler</h3>
+                    <div class="filter-section">
+                        <select id="filterClass" onchange="filterModPosts()" style="padding: 0.5rem; border-radius: 8px; border: 2px solid var(--border); margin-right: 1rem;">
+                            <option value="">Tüm Sınıflar</option>
+                            <option value="9">9. Sınıf</option>
+                            <option value="10">10. Sınıf</option>
+                            <option value="11">11. Sınıf</option>
+                            <option value="12">12. Sınıf</option>
+                        </select>
+                        <select id="filterSubject" onchange="filterModPosts()" style="padding: 0.5rem; border-radius: 8px; border: 2px solid var(--border);">
+                            <option value="">Tüm Dersler</option>
+                            <option value="Matematik">Matematik</option>
+                            <option value="Fizik">Fizik</option>
+                            <option value="Kimya">Kimya</option>
+                            <option value="Biyoloji">Biyoloji</option>
+                            <option value="Tarih">Tarih</option>
+                            <option value="Coğrafya">Coğrafya</option>
+                            <option value="Edebiyat">Edebiyat</option>
+                            <option value="İngilizce">İngilizce</option>
+                        </select>
+                    </div>
+                    <div id="modPostsList" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="modUsersTab" class="mod-tab-content">
+                <div class="mod-section">
+                    <h3>Kayıtlı Kullanıcılar</h3>
+                    <div id="modUsersList"></div>
+                </div>
+            </div>
+
+            <!-- Stats Tab -->
+            <div id="modStatsTab" class="mod-tab-content">
+                <div class="mod-section">
+                    <h3>Platform İstatistikleri</h3>
+                    <div id="modStats"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Data Storage
         let currentUser = null;
@@ -725,12 +917,19 @@
         // Initialize data
         function initializeData() {
             if (!localStorage.getItem(USERS_KEY)) {
-                // Create admin user by default
-                const initialUsers = [{
-                    username: 'Egm1141',
-                    password: 'about',
-                    registeredAt: new Date().toISOString()
-                }];
+                // Create admin users by default
+                const initialUsers = [
+                    {
+                        username: 'Egm1141',
+                        password: 'about',
+                        registeredAt: new Date().toISOString()
+                    },
+                    {
+                        username: 'Omrr1311',
+                        password: 'about',
+                        registeredAt: new Date().toISOString()
+                    }
+                ];
                 localStorage.setItem(USERS_KEY, JSON.stringify(initialUsers));
             }
             if (!localStorage.getItem(POSTS_KEY)) {
@@ -817,7 +1016,8 @@
                     document.getElementById('authModal').classList.remove('active');
                     document.getElementById('mainContent').style.display = 'block';
                     document.getElementById('userInfo').style.display = 'flex';
-                    document.getElementById('currentUserName').textContent = username + (username === 'Egm1141' ? ' 👑' : '');
+                    const isAdmin = username === 'Egm1141' || username === 'Omrr1311';
+                    document.getElementById('currentUserName').textContent = username + (isAdmin ? ' 👑' : '');
                     loadSubjects();
                     loadPosts();
                     updateLeaderboard();
@@ -948,12 +1148,12 @@
                             <div class="author-info">
                                 <div class="author-name">
                                     ${post.author}
-                                    ${post.author === 'Egm1141' ? '<span class="admin-badge">ADMIN</span>' : ''}
+                                    ${(post.author === 'Egm1141' || post.author === 'Omrr1311') ? '<span class="admin-badge">ADMIN</span>' : ''}
                                 </div>
                                 <div class="post-date">${formatDate(post.createdAt)}</div>
                             </div>
                         </div>
-                        ${currentUser.username === 'Egm1141' ? `
+                        ${(currentUser.username === 'Egm1141' || currentUser.username === 'Omrr1311') ? `
                             <div class="post-actions">
                                 <button class="btn btn-danger btn-sm" onclick="deletePost(${post.id})">🗑️ Sil</button>
                             </div>
@@ -970,7 +1170,7 @@
 
         // Delete post (admin only)
         function deletePost(postId) {
-            if (currentUser.username !== 'Egm1141') {
+            if (currentUser.username !== 'Egm1141' && currentUser.username !== 'Omrr1311') {
                 alert('Bu işlemi yapmaya yetkiniz yok!');
                 return;
             }
@@ -1013,7 +1213,7 @@
                     <div class="leader-info">
                         <div class="leader-name">
                             ${username}
-                            ${username === 'Egm1141' ? '<span class="admin-badge">ADMIN</span>' : ''}
+                            ${(username === 'Egm1141' || username === 'Omrr1311') ? '<span class="admin-badge">ADMIN</span>' : ''}
                         </div>
                         <div class="leader-score">${count} paylaşım</div>
                     </div>
@@ -1030,6 +1230,223 @@
 
         function closeImageModal() {
             document.getElementById('imageModal').classList.remove('active');
+        }
+
+        // Moderator Panel
+        function openModPanel() {
+            document.getElementById('modPanel').classList.add('active');
+            loadModPosts();
+            loadModUsers();
+            loadModStats();
+        }
+
+        function closeModPanel() {
+            document.getElementById('modPanel').classList.remove('active');
+        }
+
+        function switchModTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.mod-tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.mod-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById('mod' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Tab').classList.add('active');
+            
+            // Activate button
+            const buttons = document.querySelectorAll('.mod-tab');
+            buttons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(tabName === 'posts' ? 'gönderi' : tabName === 'users' ? 'kullanıcı' : 'istatistik')) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function loadModPosts() {
+            const posts = getPosts();
+            displayModPosts(posts);
+        }
+
+        function filterModPosts() {
+            const filterClass = document.getElementById('filterClass').value;
+            const filterSubject = document.getElementById('filterSubject').value;
+            
+            let posts = getPosts();
+            
+            if (filterClass) {
+                posts = posts.filter(p => p.class == filterClass);
+            }
+            
+            if (filterSubject) {
+                posts = posts.filter(p => p.subject === filterSubject);
+            }
+            
+            displayModPosts(posts);
+        }
+
+        function displayModPosts(posts) {
+            const container = document.getElementById('modPostsList');
+            
+            if (posts.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Gönderi bulunamadı</p>';
+                return;
+            }
+
+            container.innerHTML = posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(post => `
+                <div class="mod-post-item">
+                    <img src="${post.image}" class="mod-post-thumbnail" onclick="openImageModal('${post.image}')" alt="${post.title}">
+                    <div class="mod-post-info">
+                        <div class="mod-post-title">${post.title}</div>
+                        <div class="mod-post-meta">
+                            👤 ${post.author} | 
+                            📚 ${post.class}. Sınıf - ${post.subject} | 
+                            📅 ${formatDate(post.createdAt)}
+                        </div>
+                        ${post.description ? `<div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">${post.description}</div>` : ''}
+                        <div class="mod-post-actions" style="margin-top: 1rem;">
+                            <button class="btn btn-danger btn-sm" onclick="deletePostMod(${post.id})">🗑️ Sil</button>
+                            <button class="btn btn-primary btn-sm" onclick="openImageModal('${post.image}')">👁️ Görüntüle</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deletePostMod(postId) {
+            if (confirm('Bu gönderiyi silmek istediğinize emin misiniz?')) {
+                let posts = getPosts();
+                posts = posts.filter(p => p.id !== postId);
+                savePosts(posts);
+                loadModPosts();
+                loadPosts();
+                updateLeaderboard();
+                alert('✅ Gönderi silindi!');
+            }
+        }
+
+        function loadModUsers() {
+            const container = document.getElementById('modUsersList');
+            const users = getUsers();
+            const posts = getPosts();
+
+            if (users.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Kullanıcı bulunamadı</p>';
+                return;
+            }
+
+            container.innerHTML = users.map(user => {
+                const userPostCount = posts.filter(p => p.author === user.username).length;
+                return `
+                    <div class="user-item">
+                        <div class="user-item-info">
+                            <div class="author-avatar">${user.username[0].toUpperCase()}</div>
+                            <div>
+                                <div style="font-weight: 600;">
+                                    ${user.username}
+                                    ${user.username === 'Egm1141' ? '<span class="admin-badge">ADMIN</span>' : ''}
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                                    📅 Kayıt: ${new Date(user.registeredAt).toLocaleDateString('tr-TR')} | 
+                                    📝 ${userPostCount} gönderi
+                                </div>
+                            </div>
+                        </div>
+                        ${user.username !== 'Egm1141' && currentUser.username === 'Egm1141' ? `
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.username}')">🗑️ Kullanıcıyı Sil</button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteUser(username) {
+            if (username === 'Egm1141') {
+                alert('❌ Admin kullanıcısı silinemez!');
+                return;
+            }
+
+            if (confirm(`"${username}" kullanıcısını ve tüm gönderilerini silmek istediğinize emin misiniz?`)) {
+                // Delete user
+                let users = getUsers();
+                users = users.filter(u => u.username !== username);
+                saveUsers(users);
+
+                // Delete user's posts
+                let posts = getPosts();
+                posts = posts.filter(p => p.author !== username);
+                savePosts(posts);
+
+                loadModUsers();
+                loadPosts();
+                updateLeaderboard();
+                alert('✅ Kullanıcı ve gönderileri silindi!');
+            }
+        }
+
+        function loadModStats() {
+            const container = document.getElementById('modStats');
+            const users = getUsers();
+            const posts = getPosts();
+
+            const postsByClass = {
+                9: posts.filter(p => p.class === 9).length,
+                10: posts.filter(p => p.class === 10).length,
+                11: posts.filter(p => p.class === 11).length,
+                12: posts.filter(p => p.class === 12).length
+            };
+
+            const subjectCounts = {};
+            posts.forEach(post => {
+                subjectCounts[post.subject] = (subjectCounts[post.subject] || 0) + 1;
+            });
+
+            const topSubject = Object.entries(subjectCounts).sort((a, b) => b[1] - a[1])[0];
+
+            container.innerHTML = `
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">${users.length}</div>
+                        <div class="stat-label">Toplam Kullanıcı</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${posts.length}</div>
+                        <div class="stat-label">Toplam Gönderi</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${topSubject ? topSubject[0] : '-'}</div>
+                        <div class="stat-label">En Popüler Ders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${(posts.length / users.length || 0).toFixed(1)}</div>
+                        <div class="stat-label">Kullanıcı Başına Gönderi</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: var(--primary);">Sınıflara Göre Gönderiler</h4>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">${postsByClass[9]}</div>
+                            <div class="stat-label">9. Sınıf</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${postsByClass[10]}</div>
+                            <div class="stat-label">10. Sınıf</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${postsByClass[11]}</div>
+                            <div class="stat-label">11. Sınıf</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${postsByClass[12]}</div>
+                            <div class="stat-label">12. Sınıf</div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         // Utility functions
