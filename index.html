@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ders Paylaşım Platformu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem 5%;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        .btn {
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 5%;
+        }
+
+        /* Class Selector */
+        .class-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .class-btn {
+            padding: 1rem 2rem;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .class-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .class-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Subject Tabs */
+        .subject-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .subject-tab {
+            padding: 0.8rem 1.5rem;
+            background: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .subject-tab:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .subject-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .upload-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.8rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .file-input-label:hover {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        .btn-upload {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Posts Grid */
+        .posts-section {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .post-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-3px);
+        }
+
+        .post-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .post-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+
+        .author-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .author-name {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .post-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .post-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            background: var(--bg-primary);
+            cursor: pointer;
+        }
+
+        .post-content {
+            padding: 1.5rem;
+        }
+
+        .post-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .post-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 100px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .leaderboard-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-item:hover {
+            background: var(--bg-primary);
+        }
+
+        .rank {
+            font-weight: 700;
+            font-size: 1.2rem;
+            width: 30px;
+            text-align: center;
+        }
+
+        .rank-1 { color: #fbbf24; }
+        .rank-2 { color: #94a3b8; }
+        .rank-3 { color: #cd7f32; }
+
+        .leader-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+
+        .leader-info {
+            flex: 1;
+        }
+
+        .leader-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .leader-score {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .score-badge {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+            padding: 2rem;
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .login-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-tab {
+            flex: 1;
+            padding: 0.8rem;
+            background: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .login-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .image-modal-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            padding: 0;
+            background: transparent;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        /* Admin Panel */
+        .admin-badge {
+            background: var(--warning);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .leaderboard {
+                position: relative;
+                top: 0;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .class-selector {
+                flex-direction: column;
+            }
+
+            .class-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                📚 Ders Paylaşım Platformu
+            </div>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <span class="user-name" id="currentUserName"></span>
+                <button class="btn btn-danger btn-sm" onclick="logout()">Çıkış</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container" id="mainContent" style="display: none;">
+        <!-- Class Selector -->
+        <div class="class-selector">
+            <button class="class-btn active" onclick="selectClass(9)">9. Sınıf</button>
+            <button class="class-btn" onclick="selectClass(10)">10. Sınıf</button>
+            <button class="class-btn" onclick="selectClass(11)">11. Sınıf</button>
+            <button class="class-btn" onclick="selectClass(12)">12. Sınıf</button>
+        </div>
+
+        <!-- Subject Tabs -->
+        <div class="subject-tabs" id="subjectTabs"></div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Main Content -->
+            <div>
+                <!-- Upload Section -->
+                <div class="upload-section">
+                    <h2 class="upload-title">📤 Yeni Konu Anlatımı Paylaş</h2>
+                    <form class="upload-form" id="uploadForm">
+                        <div class="form-group">
+                            <label>Başlık</label>
+                            <input type="text" id="postTitle" placeholder="Örn: Türev Formülleri" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Açıklama (Opsiyonel)</label>
+                            <textarea id="postDescription" rows="3" placeholder="Konu hakkında kısa açıklama..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Konu Anlatımı Görseli</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="postImage" accept="image/*" required>
+                                <label for="postImage" class="file-input-label">
+                                    📎 Görsel Seç
+                                </label>
+                            </div>
+                            <span id="fileName" style="font-size: 0.85rem; color: var(--text-secondary);"></span>
+                        </div>
+                        <button type="submit" class="btn btn-upload">Paylaş</button>
+                    </form>
+                </div>
+
+                <!-- Posts Section -->
+                <div class="posts-section" id="postsSection"></div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="leaderboard">
+                <h3 class="leaderboard-title">🏆 Skor Tablosu</h3>
+                <div id="leaderboardContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login/Register Modal -->
+    <div id="authModal" class="modal active">
+        <div class="modal-content">
+            <h2 class="modal-title">Hoş Geldiniz!</h2>
+            <div class="login-tabs">
+                <button class="login-tab active" onclick="switchAuthTab('login')">Giriş Yap</button>
+                <button class="login-tab" onclick="switchAuthTab('register')">Kayıt Ol</button>
+            </div>
+            <form class="login-form" id="authForm">
+                <div class="form-group">
+                    <label>Kullanıcı Adı</label>
+                    <input type="text" id="authUsername" placeholder="Kullanıcı adınız" required>
+                </div>
+                <div class="form-group">
+                    <label>Şifre</label>
+                    <input type="password" id="authPassword" placeholder="Şifreniz" required>
+                </div>
+                <button type="submit" class="btn btn-upload" id="authSubmitBtn">Giriş Yap</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content image-modal-content">
+            <span class="modal-close" onclick="closeImageModal()">&times;</span>
+            <img id="modalImage" class="modal-image" src="" alt="">
+        </div>
+    </div>
+
+    <script>
+        // Data Storage
+        let currentUser = null;
+        let currentClass = 9;
+        let currentSubject = 'Matematik';
+        let authMode = 'login';
+        
+        const subjects = {
+            9: ['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Edebiyat', 'İngilizce'],
+            10: ['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Edebiyat', 'İngilizce'],
+            11: ['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Edebiyat', 'İngilizce', 'Felsefe'],
+            12: ['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Edebiyat', 'İngilizce', 'Din Kültürü']
+        };
+
+        // LocalStorage keys
+        const USERS_KEY = 'ders_users';
+        const POSTS_KEY = 'ders_posts';
+
+        // Initialize data
+        function initializeData() {
+            if (!localStorage.getItem(USERS_KEY)) {
+                // Create admin user by default
+                const initialUsers = [{
+                    username: 'Egm1141',
+                    password: 'about',
+                    registeredAt: new Date().toISOString()
+                }];
+                localStorage.setItem(USERS_KEY, JSON.stringify(initialUsers));
+            }
+            if (!localStorage.getItem(POSTS_KEY)) {
+                localStorage.setItem(POSTS_KEY, JSON.stringify([]));
+            }
+        }
+
+        // Get data
+        function getUsers() {
+            return JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+        }
+
+        function getPosts() {
+            return JSON.parse(localStorage.getItem(POSTS_KEY) || '[]');
+        }
+
+        // Save data
+        function saveUsers(users) {
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        }
+
+        function savePosts(posts) {
+            localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
+        }
+
+        // Auth functions
+        function switchAuthTab(mode) {
+            authMode = mode;
+            const tabs = document.querySelectorAll('.login-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Find and activate the clicked tab
+            tabs.forEach(tab => {
+                if ((mode === 'login' && tab.textContent === 'Giriş Yap') || 
+                    (mode === 'register' && tab.textContent === 'Kayıt Ol')) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            const submitBtn = document.getElementById('authSubmitBtn');
+            submitBtn.textContent = mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol';
+        }
+
+        document.getElementById('authForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('authUsername').value.trim();
+            const password = document.getElementById('authPassword').value;
+
+            if (!username || !password) {
+                alert('Lütfen tüm alanları doldurun!');
+                return;
+            }
+
+            const users = getUsers();
+
+            if (authMode === 'register') {
+                // Check if username exists
+                if (users.find(u => u.username === username)) {
+                    alert('Bu kullanıcı adı zaten kullanılıyor!');
+                    return;
+                }
+
+                // Create new user
+                users.push({
+                    username: username,
+                    password: password,
+                    registeredAt: new Date().toISOString()
+                });
+                saveUsers(users);
+                alert('✅ Kayıt başarılı! Şimdi giriş yapabilirsiniz.');
+                
+                // Switch to login tab
+                authMode = 'login';
+                const tabs = document.querySelectorAll('.login-tab');
+                tabs.forEach(tab => tab.classList.remove('active'));
+                tabs[0].classList.add('active');
+                document.getElementById('authSubmitBtn').textContent = 'Giriş Yap';
+                document.getElementById('authForm').reset();
+            } else {
+                // Login
+                const user = users.find(u => u.username === username && u.password === password);
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('authModal').classList.remove('active');
+                    document.getElementById('mainContent').style.display = 'block';
+                    document.getElementById('userInfo').style.display = 'flex';
+                    document.getElementById('currentUserName').textContent = username + (username === 'Egm1141' ? ' 👑' : '');
+                    loadSubjects();
+                    loadPosts();
+                    updateLeaderboard();
+                } else {
+                    alert('❌ Kullanıcı adı veya şifre hatalı!');
+                }
+            }
+        });
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('authModal').classList.add('active');
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('authForm').reset();
+        }
+
+        // Class selection
+        function selectClass(classNumber) {
+            currentClass = classNumber;
+            const buttons = document.querySelectorAll('.class-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(classNumber.toString())) {
+                    btn.classList.add('active');
+                }
+            });
+            loadSubjects();
+            loadPosts();
+        }
+
+        // Load subjects
+        function loadSubjects() {
+            const container = document.getElementById('subjectTabs');
+            container.innerHTML = '';
+            
+            subjects[currentClass].forEach((subject, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'subject-tab' + (index === 0 ? ' active' : '');
+                btn.textContent = subject;
+                btn.onclick = () => selectSubject(subject);
+                container.appendChild(btn);
+            });
+            
+            currentSubject = subjects[currentClass][0];
+        }
+
+        function selectSubject(subject) {
+            currentSubject = subject;
+            const buttons = document.querySelectorAll('.subject-tab');
+            buttons.forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === subject);
+            });
+            loadPosts();
+        }
+
+        // File upload handling
+        document.getElementById('postImage').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || '';
+            document.getElementById('fileName').textContent = fileName ? `Seçili: ${fileName}` : '';
+        });
+
+        // Upload post
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('postTitle').value.trim();
+            const description = document.getElementById('postDescription').value.trim();
+            const imageFile = document.getElementById('postImage').files[0];
+
+            if (!title || !imageFile) {
+                alert('Lütfen başlık ve görsel seçin!');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const posts = getPosts();
+                const newPost = {
+                    id: Date.now(),
+                    title: title,
+                    description: description,
+                    image: event.target.result,
+                    author: currentUser.username,
+                    class: currentClass,
+                    subject: currentSubject,
+                    createdAt: new Date().toISOString()
+                };
+
+                posts.push(newPost);
+                savePosts(posts);
+                
+                // Reset form
+                document.getElementById('uploadForm').reset();
+                document.getElementById('fileName').textContent = '';
+                
+                alert('✅ Konu anlatımınız başarıyla paylaşıldı!');
+                loadPosts();
+                updateLeaderboard();
+            };
+
+            reader.readAsDataURL(imageFile);
+        });
+
+        // Load posts
+        function loadPosts() {
+            const container = document.getElementById('postsSection');
+            const posts = getPosts()
+                .filter(p => p.class === currentClass && p.subject === currentSubject)
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            if (posts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>Henüz içerik yok</h3>
+                        <p>Bu ders için henüz konu anlatımı paylaşılmamış. İlk paylaşan sen ol!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = posts.map(post => `
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-author">
+                            <div class="author-avatar">${post.author[0].toUpperCase()}</div>
+                            <div class="author-info">
+                                <div class="author-name">
+                                    ${post.author}
+                                    ${post.author === 'Egm1141' ? '<span class="admin-badge">ADMIN</span>' : ''}
+                                </div>
+                                <div class="post-date">${formatDate(post.createdAt)}</div>
+                            </div>
+                        </div>
+                        ${currentUser.username === 'Egm1141' ? `
+                            <div class="post-actions">
+                                <button class="btn btn-danger btn-sm" onclick="deletePost(${post.id})">🗑️ Sil</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <img src="${post.image}" alt="${post.title}" class="post-image" onclick="openImageModal('${post.image}')">
+                    <div class="post-content">
+                        <h3 class="post-title">${post.title}</h3>
+                        ${post.description ? `<p class="post-description">${post.description}</p>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Delete post (admin only)
+        function deletePost(postId) {
+            if (currentUser.username !== 'Egm1141') {
+                alert('Bu işlemi yapmaya yetkiniz yok!');
+                return;
+            }
+
+            if (confirm('Bu gönderiyi silmek istediğinize emin misiniz?')) {
+                let posts = getPosts();
+                posts = posts.filter(p => p.id !== postId);
+                savePosts(posts);
+                loadPosts();
+                updateLeaderboard();
+                alert('✅ Gönderi silindi!');
+            }
+        }
+
+        // Update leaderboard
+        function updateLeaderboard() {
+            const container = document.getElementById('leaderboardContent');
+            const posts = getPosts();
+            
+            // Count posts per user
+            const userCounts = {};
+            posts.forEach(post => {
+                userCounts[post.author] = (userCounts[post.author] || 0) + 1;
+            });
+
+            // Sort by count
+            const leaderboard = Object.entries(userCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            if (leaderboard.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Henüz paylaşım yok</p>';
+                return;
+            }
+
+            container.innerHTML = leaderboard.map(([username, count], index) => `
+                <div class="leaderboard-item">
+                    <div class="rank rank-${index + 1}">#${index + 1}</div>
+                    <div class="leader-avatar">${username[0].toUpperCase()}</div>
+                    <div class="leader-info">
+                        <div class="leader-name">
+                            ${username}
+                            ${username === 'Egm1141' ? '<span class="admin-badge">ADMIN</span>' : ''}
+                        </div>
+                        <div class="leader-score">${count} paylaşım</div>
+                    </div>
+                    <div class="score-badge">${count}</div>
+                </div>
+            `).join('');
+        }
+
+        // Image modal
+        function openImageModal(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+            document.getElementById('imageModal').classList.add('active');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+        }
+
+        // Utility functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'Az önce';
+            if (minutes < 60) return `${minutes} dakika önce`;
+            if (hours < 24) return `${hours} saat önce`;
+            if (days < 7) return `${days} gün önce`;
+            
+            return date.toLocaleDateString('tr-TR');
+        }
+
+        // Initialize
+        initializeData();
+    </script>
+</body>
+</html>
