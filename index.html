@@ -5,6 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ders Paylaşım Platformu</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDVC44SWG6p9e0F2JNWc66zMJJTXO7TF98",
+            authDomain: "konu-anlat.firebaseapp.com",
+            projectId: "konu-anlat",
+            storageBucket: "konu-anlat.firebasestorage.app",
+            messagingSenderId: "283509599639",
+            appId: "1:283509599639:web:05578aa68fea8243d8a8d2",
+            measurementId: "G-E0SZZ0M7WD"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make Firebase available globally
+        window.db = db;
+        window.firestore = { collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, query, orderBy };
+    </script>
+    
     <style>
         :root {
             --primary: #667eea;
@@ -897,11 +923,12 @@
     </div>
 
     <script>
-        // Data Storage
+        // Data Storage with Firebase
         let currentUser = null;
         let currentClass = 9;
         let currentSubject = 'Matematik';
         let authMode = 'login';
+        let postsListener = null;
         
         const subjects = {
             9: ['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Edebiyat', 'İngilizce'],
@@ -910,12 +937,11 @@
             12: ['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Edebiyat', 'İngilizce', 'Din Kültürü']
         };
 
-        // LocalStorage keys
+        // LocalStorage keys (for backward compatibility - users only)
         const USERS_KEY = 'ders_users';
-        const POSTS_KEY = 'ders_posts';
 
         // Initialize data
-        function initializeData() {
+        async function initializeData() {
             if (!localStorage.getItem(USERS_KEY)) {
                 // Create admin users by default
                 const initialUsers = [
@@ -932,9 +958,6 @@
                 ];
                 localStorage.setItem(USERS_KEY, JSON.stringify(initialUsers));
             }
-            if (!localStorage.getItem(POSTS_KEY)) {
-                localStorage.setItem(POSTS_KEY, JSON.stringify([]));
-            }
         }
 
         // Get data
@@ -942,8 +965,19 @@
             return JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
         }
 
-        function getPosts() {
-            return JSON.parse(localStorage.getItem(POSTS_KEY) || '[]');
+        async function getPosts() {
+            try {
+                const postsCol = window.firestore.collection(window.db, 'posts');
+                const q = window.firestore.query(postsCol, window.firestore.orderBy('createdAt', 'desc'));
+                const snapshot = await window.firestore.getDocs(q);
+                return snapshot.docs.map(doc => ({
+                    firestoreId: doc.id,
+                    ...doc.data()
+                }));
+            } catch (error) {
+                console.error('Error getting posts:', error);
+                return [];
+            }
         }
 
         // Save data
@@ -951,8 +985,24 @@
             localStorage.setItem(USERS_KEY, JSON.stringify(users));
         }
 
-        function savePosts(posts) {
-            localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
+        async function savePost(post) {
+            try {
+                const postsCol = window.firestore.collection(window.db, 'posts');
+                await window.firestore.addDoc(postsCol, post);
+            } catch (error) {
+                console.error('Error saving post:', error);
+                alert('❌ Gönderi kaydedilirken hata oluştu!');
+            }
+        }
+
+        async function deletePostFromFirestore(firestoreId) {
+            try {
+                const postDoc = window.firestore.doc(window.db, 'posts', firestoreId);
+                await window.firestore.deleteDoc(postDoc);
+            } catch (error) {
+                console.error('Error deleting post:', error);
+                alert('❌ Gönderi silinirken hata oluştu!');
+            }
         }
 
         // Auth functions
@@ -1028,6 +1078,9 @@
         });
 
         function logout() {
+            if (postsListener) {
+                postsListener(); // Unsubscribe from real-time updates
+            }
             currentUser = null;
             document.getElementById('authModal').classList.add('active');
             document.getElementById('mainContent').style.display = 'none';
@@ -1094,8 +1147,7 @@
             }
 
             const reader = new FileReader();
-            reader.onload = function(event) {
-                const posts = getPosts();
+            reader.onload = async function(event) {
                 const newPost = {
                     id: Date.now(),
                     title: title,
@@ -1107,99 +1159,109 @@
                     createdAt: new Date().toISOString()
                 };
 
-                posts.push(newPost);
-                savePosts(posts);
+                await savePost(newPost);
                 
                 // Reset form
                 document.getElementById('uploadForm').reset();
                 document.getElementById('fileName').textContent = '';
                 
                 alert('✅ Konu anlatımınız başarıyla paylaşıldı!');
-                loadPosts();
-                updateLeaderboard();
+                // Posts will auto-update via listener
             };
 
             reader.readAsDataURL(imageFile);
         });
 
-        // Load posts - UPDATED TO SHOW ALL POSTS
-        function loadPosts() {
+        // Load posts - UPDATED TO SHOW ALL POSTS WITH FIREBASE
+        async function loadPosts() {
             const container = document.getElementById('postsSection');
-            let posts = getPosts();
             
-            // Filter by selected class and subject
-            posts = posts.filter(p => p.class === currentClass && p.subject === currentSubject);
-            
-            posts = posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-            if (posts.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📭</div>
-                        <h3>Henüz içerik yok</h3>
-                        <p>Bu kategori için henüz konu anlatımı paylaşılmamış. İlk paylaşan sen ol!</p>
-                    </div>
-                `;
-                return;
+            // Setup real-time listener
+            if (postsListener) {
+                postsListener(); // Unsubscribe previous listener
             }
+            
+            const postsCol = window.firestore.collection(window.db, 'posts');
+            const q = window.firestore.query(postsCol, window.firestore.orderBy('createdAt', 'desc'));
+            
+            postsListener = window.firestore.onSnapshot(q, (snapshot) => {
+                let posts = snapshot.docs.map(doc => ({
+                    firestoreId: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Filter by selected class and subject
+                posts = posts.filter(p => p.class === currentClass && p.subject === currentSubject);
 
-            container.innerHTML = posts.map(post => `
-                <div class="post-card">
-                    <div class="post-header">
-                        <div class="post-author">
-                            <div class="author-avatar">${post.author[0].toUpperCase()}</div>
-                            <div class="author-info">
-                                <div class="author-name">
-                                    ${post.author}
-                                    ${(post.author === 'Egm1141' || post.author === 'Omrr1311') ? '<span class="admin-badge">ADMIN</span>' : ''}
-                                </div>
-                                <div class="post-date">
-                                    <span style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; margin-right: 0.5rem;">
-                                        ${post.class}. Sınıf
-                                    </span>
-                                    <span style="background: var(--success); color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; margin-right: 0.5rem;">
-                                        ${post.subject}
-                                    </span>
-                                    ${formatDate(post.createdAt)}
-                                </div>
-                            </div>
+                if (posts.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <h3>Henüz içerik yok</h3>
+                            <p>Bu kategori için henüz konu anlatımı paylaşılmamış. İlk paylaşan sen ol!</p>
                         </div>
-                        ${(currentUser.username === 'Egm1141' || currentUser.username === 'Omrr1311') ? `
-                            <div class="post-actions">
-                                <button class="btn btn-danger btn-sm" onclick="deletePost(${post.id})">🗑️ Sil</button>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = posts.map(post => `
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div class="post-author">
+                                <div class="author-avatar">${post.author[0].toUpperCase()}</div>
+                                <div class="author-info">
+                                    <div class="author-name">
+                                        ${post.author}
+                                        ${(post.author === 'Egm1141' || post.author === 'Omrr1311') ? '<span class="admin-badge">ADMIN</span>' : ''}
+                                    </div>
+                                    <div class="post-date">
+                                        <span style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; margin-right: 0.5rem;">
+                                            ${post.class}. Sınıf
+                                        </span>
+                                        <span style="background: var(--success); color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; margin-right: 0.5rem;">
+                                            ${post.subject}
+                                        </span>
+                                        ${formatDate(post.createdAt)}
+                                    </div>
+                                </div>
                             </div>
-                        ` : ''}
+                            ${(currentUser.username === 'Egm1141' || currentUser.username === 'Omrr1311') ? `
+                                <div class="post-actions">
+                                    <button class="btn btn-danger btn-sm" onclick="deletePost('${post.firestoreId}')">🗑️ Sil</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <img src="${post.image}" alt="${post.title}" class="post-image" onclick="openImageModal('${post.image}')">
+                        <div class="post-content">
+                            <h3 class="post-title">${post.title}</h3>
+                            ${post.description ? `<p class="post-description">${post.description}</p>` : ''}
+                        </div>
                     </div>
-                    <img src="${post.image}" alt="${post.title}" class="post-image" onclick="openImageModal('${post.image}')">
-                    <div class="post-content">
-                        <h3 class="post-title">${post.title}</h3>
-                        ${post.description ? `<p class="post-description">${post.description}</p>` : ''}
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
+                
+                // Update leaderboard when posts change
+                updateLeaderboard();
+            });
         }
 
         // Delete post (admin only)
-        function deletePost(postId) {
+        async function deletePost(firestoreId) {
             if (currentUser.username !== 'Egm1141' && currentUser.username !== 'Omrr1311') {
                 alert('Bu işlemi yapmaya yetkiniz yok!');
                 return;
             }
 
             if (confirm('Bu gönderiyi silmek istediğinize emin misiniz?')) {
-                let posts = getPosts();
-                posts = posts.filter(p => p.id !== postId);
-                savePosts(posts);
-                loadPosts();
-                updateLeaderboard();
+                await deletePostFromFirestore(firestoreId);
                 alert('✅ Gönderi silindi!');
+                // Posts will auto-update via listener
             }
         }
 
         // Update leaderboard
-        function updateLeaderboard() {
+        async function updateLeaderboard() {
             const container = document.getElementById('leaderboardContent');
-            const posts = getPosts();
+            const posts = await getPosts();
             
             // Count posts per user
             const userCounts = {};
@@ -1277,15 +1339,14 @@
         }
 
         function loadModPosts() {
-            const posts = getPosts();
-            displayModPosts(posts);
+            filterModPosts();
         }
 
-        function filterModPosts() {
+        async function filterModPosts() {
             const filterClass = document.getElementById('filterClass').value;
             const filterSubject = document.getElementById('filterSubject').value;
             
-            let posts = getPosts();
+            let posts = await getPosts();
             
             if (filterClass) {
                 posts = posts.filter(p => p.class == filterClass);
@@ -1306,7 +1367,7 @@
                 return;
             }
 
-            container.innerHTML = posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(post => `
+            container.innerHTML = posts.map(post => `
                 <div class="mod-post-item">
                     <img src="${post.image}" class="mod-post-thumbnail" onclick="openImageModal('${post.image}')" alt="${post.title}">
                     <div class="mod-post-info">
@@ -1318,7 +1379,7 @@
                         </div>
                         ${post.description ? `<div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">${post.description}</div>` : ''}
                         <div class="mod-post-actions" style="margin-top: 1rem;">
-                            <button class="btn btn-danger btn-sm" onclick="deletePostMod(${post.id})">🗑️ Sil</button>
+                            <button class="btn btn-danger btn-sm" onclick="deletePostMod('${post.firestoreId}')">🗑️ Sil</button>
                             <button class="btn btn-primary btn-sm" onclick="openImageModal('${post.image}')">👁️ Görüntüle</button>
                         </div>
                     </div>
@@ -1326,22 +1387,19 @@
             `).join('');
         }
 
-        function deletePostMod(postId) {
+        async function deletePostMod(firestoreId) {
             if (confirm('Bu gönderiyi silmek istediğinize emin misiniz?')) {
-                let posts = getPosts();
-                posts = posts.filter(p => p.id !== postId);
-                savePosts(posts);
+                await deletePostFromFirestore(firestoreId);
                 loadModPosts();
-                loadPosts();
-                updateLeaderboard();
                 alert('✅ Gönderi silindi!');
+                // Posts will auto-update via listener
             }
         }
 
-        function loadModUsers() {
+        async function loadModUsers() {
             const container = document.getElementById('modUsersList');
             const users = getUsers();
-            const posts = getPosts();
+            const posts = await getPosts();
 
             if (users.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Kullanıcı bulunamadı</p>';
@@ -1373,7 +1431,7 @@
             }).join('');
         }
 
-        function deleteUser(username) {
+        async function deleteUser(username) {
             if (username === 'Egm1141') {
                 alert('❌ Admin kullanıcısı silinemez!');
                 return;
@@ -1385,22 +1443,22 @@
                 users = users.filter(u => u.username !== username);
                 saveUsers(users);
 
-                // Delete user's posts
-                let posts = getPosts();
-                posts = posts.filter(p => p.author !== username);
-                savePosts(posts);
+                // Delete user's posts from Firestore
+                const posts = await getPosts();
+                const userPosts = posts.filter(p => p.author === username);
+                for (const post of userPosts) {
+                    await deletePostFromFirestore(post.firestoreId);
+                }
 
                 loadModUsers();
-                loadPosts();
-                updateLeaderboard();
                 alert('✅ Kullanıcı ve gönderileri silindi!');
             }
         }
 
-        function loadModStats() {
+        async function loadModStats() {
             const container = document.getElementById('modStats');
             const users = getUsers();
-            const posts = getPosts();
+            const posts = await getPosts();
 
             const postsByClass = {
                 9: posts.filter(p => p.class === 9).length,
