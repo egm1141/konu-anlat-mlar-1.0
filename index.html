@@ -306,6 +306,12 @@
             box-shadow: var(--shadow-lg);
         }
 
+        .btn-upload:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* Posts Grid */
         .posts-section {
             display: grid;
@@ -817,6 +823,9 @@
                                 </label>
                             </div>
                             <span id="fileName" style="font-size: 0.85rem; color: var(--text-secondary);"></span>
+                            <span style="font-size: 0.75rem; color: var(--warning); margin-top: 0.25rem; display: block;">
+                                💡 İpucu: Görseller otomatik olarak sıkıştırılır. Çok büyük görseller reddedilebilir.
+                            </span>
                         </div>
                         <button type="submit" class="btn btn-upload">Paylaş</button>
                     </form>
@@ -988,10 +997,18 @@
         async function savePost(post) {
             try {
                 const postsCol = window.firestore.collection(window.db, 'posts');
-                await window.firestore.addDoc(postsCol, post);
+                const docRef = await window.firestore.addDoc(postsCol, post);
+                console.log('Post saved with ID:', docRef.id);
+                return docRef;
             } catch (error) {
                 console.error('Error saving post:', error);
-                alert('❌ Gönderi kaydedilirken hata oluştu!');
+                if (error.code === 'permission-denied') {
+                    throw new Error('Yetki hatası! Firebase ayarlarını kontrol edin.');
+                } else if (error.code === 'resource-exhausted') {
+                    throw new Error('Görsel çok büyük! Lütfen daha küçük bir görsel kullanın.');
+                } else {
+                    throw new Error('Veritabanı hatası: ' + error.message);
+                }
             }
         }
 
@@ -1003,6 +1020,56 @@
                 console.error('Error deleting post:', error);
                 alert('❌ Gönderi silinirken hata oluştu!');
             }
+        }
+
+        // Image compression function
+        function compressImage(file, maxWidth, quality, callback) {
+            const reader = new FileReader();
+            
+            reader.onerror = function() {
+                console.error('File reading error');
+                callback(null);
+            };
+            
+            reader.onload = function(event) {
+                const img = new Image();
+                
+                img.onerror = function() {
+                    console.error('Image loading error');
+                    callback(null);
+                };
+                
+                img.onload = function() {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Calculate new dimensions
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert to base64
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                        callback(compressedBase64);
+                    } catch (error) {
+                        console.error('Compression error:', error);
+                        callback(null);
+                    }
+                };
+
+                img.src = event.target.result;
+            };
+
+            reader.readAsDataURL(file);
         }
 
         // Auth functions
@@ -1133,7 +1200,7 @@
             document.getElementById('fileName').textContent = fileName ? `Seçili: ${fileName}` : '';
         });
 
-        // Upload post
+        // Upload post - IMPROVED VERSION
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -1146,30 +1213,63 @@
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = async function(event) {
+            // Check file type
+            if (!imageFile.type.startsWith('image/')) {
+                alert('❌ Lütfen geçerli bir görsel dosyası seçin!');
+                return;
+            }
+
+            // Show loading
+            const submitBtn = e.target.querySelector('.btn-upload');
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.textContent = '⏳ Yükleniyor...';
+            submitBtn.disabled = true;
+
+            // Compress and upload image
+            compressImage(imageFile, 800, 0.85, async function(compressedBase64) {
+                if (!compressedBase64) {
+                    alert('❌ Görsel işlenirken hata oluştu!');
+                    submitBtn.textContent = originalBtnText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+
+                // Check size (Firestore limit is ~1MB per document)
+                const sizeInMB = (compressedBase64.length * 0.75) / (1024 * 1024);
+                if (sizeInMB > 0.9) {
+                    alert('❌ Görsel çok büyük! Lütfen daha küçük bir görsel seçin veya görsel kalitesini düşürün.');
+                    submitBtn.textContent = originalBtnText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+
                 const newPost = {
                     id: Date.now(),
                     title: title,
                     description: description,
-                    image: event.target.result,
+                    image: compressedBase64,
                     author: currentUser.username,
                     class: currentClass,
                     subject: currentSubject,
                     createdAt: new Date().toISOString()
                 };
 
-                await savePost(newPost);
-                
-                // Reset form
-                document.getElementById('uploadForm').reset();
-                document.getElementById('fileName').textContent = '';
-                
-                alert('✅ Konu anlatımınız başarıyla paylaşıldı!');
-                // Posts will auto-update via listener
-            };
-
-            reader.readAsDataURL(imageFile);
+                try {
+                    await savePost(newPost);
+                    
+                    // Reset form
+                    document.getElementById('uploadForm').reset();
+                    document.getElementById('fileName').textContent = '';
+                    
+                    alert('✅ Konu anlatımınız başarıyla paylaşıldı!');
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('❌ Yükleme sırasında hata oluştu: ' + error.message);
+                } finally {
+                    submitBtn.textContent = originalBtnText;
+                    submitBtn.disabled = false;
+                }
+            });
         });
 
         // Load posts - UPDATED TO SHOW ALL POSTS WITH FIREBASE
@@ -1415,7 +1515,7 @@
                             <div>
                                 <div style="font-weight: 600;">
                                     ${user.username}
-                                    ${user.username === 'Egm1141' ? '<span class="admin-badge">ADMIN</span>' : ''}
+                                    ${(user.username === 'Egm1141' || user.username === 'Omrr1311') ? '<span class="admin-badge">ADMIN</span>' : ''}
                                 </div>
                                 <div style="font-size: 0.85rem; color: var(--text-secondary);">
                                     📅 Kayıt: ${new Date(user.registeredAt).toLocaleDateString('tr-TR')} | 
@@ -1423,7 +1523,7 @@
                                 </div>
                             </div>
                         </div>
-                        ${user.username !== 'Egm1141' && currentUser.username === 'Egm1141' ? `
+                        ${(user.username !== 'Egm1141' && user.username !== 'Omrr1311' && (currentUser.username === 'Egm1141' || currentUser.username === 'Omrr1311')) ? `
                             <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.username}')">🗑️ Kullanıcıyı Sil</button>
                         ` : ''}
                     </div>
@@ -1432,7 +1532,7 @@
         }
 
         async function deleteUser(username) {
-            if (username === 'Egm1141') {
+            if (username === 'Egm1141' || username === 'Omrr1311') {
                 alert('❌ Admin kullanıcısı silinemez!');
                 return;
             }
