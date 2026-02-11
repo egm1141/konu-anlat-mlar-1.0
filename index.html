@@ -1122,19 +1122,22 @@
             reader.readAsDataURL(imageFile);
         });
 
-        // Load posts
+        // Load posts - UPDATED TO SHOW ALL POSTS
         function loadPosts() {
             const container = document.getElementById('postsSection');
-            const posts = getPosts()
-                .filter(p => p.class === currentClass && p.subject === currentSubject)
-                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            let posts = getPosts();
+            
+            // Filter by selected class and subject
+            posts = posts.filter(p => p.class === currentClass && p.subject === currentSubject);
+            
+            posts = posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
             if (posts.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📭</div>
                         <h3>Henüz içerik yok</h3>
-                        <p>Bu ders için henüz konu anlatımı paylaşılmamış. İlk paylaşan sen ol!</p>
+                        <p>Bu kategori için henüz konu anlatımı paylaşılmamış. İlk paylaşan sen ol!</p>
                     </div>
                 `;
                 return;
@@ -1150,7 +1153,15 @@
                                     ${post.author}
                                     ${(post.author === 'Egm1141' || post.author === 'Omrr1311') ? '<span class="admin-badge">ADMIN</span>' : ''}
                                 </div>
-                                <div class="post-date">${formatDate(post.createdAt)}</div>
+                                <div class="post-date">
+                                    <span style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; margin-right: 0.5rem;">
+                                        ${post.class}. Sınıf
+                                    </span>
+                                    <span style="background: var(--success); color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; margin-right: 0.5rem;">
+                                        ${post.subject}
+                                    </span>
+                                    ${formatDate(post.createdAt)}
+                                </div>
                             </div>
                         </div>
                         ${(currentUser.username === 'Egm1141' || currentUser.username === 'Omrr1311') ? `
